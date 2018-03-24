@@ -4,14 +4,17 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
+using AutoMapper;
 using Swashbuckle.Swagger.Annotations;
 using WeatherCal.AzureAPI.Models;
+using WeatherCal.UserMgmt;
+using WeatherCal.UserMgmt.Entities;
 
 namespace WeatherCal.AzureAPI.Controllers
 {
     public class SubscriptionController : ApiController
     {
-        // GET api/values
+        // GET api/subscription
         [SwaggerOperation("GetAll")]
         public IEnumerable<string> Get()
         {
@@ -22,7 +25,7 @@ namespace WeatherCal.AzureAPI.Controllers
         [SwaggerOperation("GetById")]
         [SwaggerResponse(HttpStatusCode.OK)]
         [SwaggerResponse(HttpStatusCode.NotFound)]
-        public string Get(int id)
+        public string Get(Guid id)
         {
             return "value";
         }
@@ -30,26 +33,29 @@ namespace WeatherCal.AzureAPI.Controllers
         // POST api/values
         [SwaggerOperation("Create")]
         [SwaggerResponse(HttpStatusCode.Created)]
-        public void Post([FromBody]SubscribeRequest value)
+        public void Post([FromBody]SubscriptionDto subscriptionDto)
         {
-            // todo: value to dto to tablestorage
-            var x = value;
+            var subscription = Mapper.Map<Subscription>(subscriptionDto);
+            var registration = new Registration();
+            registration.CreateSubscription(subscription, new Guid(subscriptionDto.FeedId));
         }
 
-        // PUT api/values/5
+        // PUT api/subscription/5
         [SwaggerOperation("Update")]
         [SwaggerResponse(HttpStatusCode.OK)]
         [SwaggerResponse(HttpStatusCode.NotFound)]
-        public void Put(int id, [FromBody]string value)
+        public void Put(Guid id, [FromBody]string value)
         {
+            
         }
 
-        // DELETE api/values/5
+        // DELETE api/subscription/5
         [SwaggerOperation("Delete")]
         [SwaggerResponse(HttpStatusCode.OK)]
         [SwaggerResponse(HttpStatusCode.NotFound)]
         public void Delete(Guid id)
         {
+
         }
     }
 }
