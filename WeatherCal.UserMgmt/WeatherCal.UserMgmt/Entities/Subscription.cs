@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Microsoft.WindowsAzure.Storage.Table;
 
 namespace WeatherCal.UserMgmt.Entities
 {
-    public class Subscription
+    public class Subscription : TableEntity
     {
         public Guid Id { get; set; } = Guid.NewGuid();
 

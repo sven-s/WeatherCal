@@ -2,36 +2,71 @@
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Table;
 using WeatherCal.UserMgmt.Entities;
 
 namespace WeatherCal.UserMgmt
 {
     public class Registration
     {
-
-        //loudStorageAccount storageAccount = CloudStorageAccount.Parse
-        //    ("DefaultEndpointsProtocol=https;AccountName=your_account;AccountKey=your_account_key");
-
         public const string UserTableName = "Users";
+        public const string FeedTableName = "Feeds";
         public const string SubscriptionTableName = "Subcriptions";
-        //public const string 
+
+        public const string ConnectionString = "DefaultEndpointsProtocol=https;AccountName=your_account;AccountKey=your_account_key";
 
         private CloudStorageAccount _cloudStorageAccount;
+        private CloudTableClient _tableClient;
 
-        public Registration()
+        private CloudTable _userTable;
+        private CloudTable _feedTable;
+        private CloudTable _subcriptionTable;
+
+        
+
+        
+
+        public Registration(string connectionstring = "")
         {
-            _cloudStorageAccount = CloudStorageAccount.Parse(
-                "DefaultEndpointsProtocol=https;AccountName=your_account;AccountKey=your_account_key");
+            if (string.IsNullOrEmpty(connectionstring))
+                connectionstring = ConnectionString;
+            _cloudStorageAccount = CloudStorageAccount.Parse(connectionstring);
+            InitializeTables();
         }
 
         private void InitializeTables()
         {
+            _tableClient = _cloudStorageAccount.CreateCloudTableClient();
+            _userTable = _tableClient.GetTableReference(UserTableName);
+            _feedTable = _tableClient.GetTableReference(SubscriptionTableName);
+            _subcriptionTable = _tableClient.GetTableReference(SubscriptionTableName);
+
+            _userTable.CreateIfNotExistsAsync();
+            _feedTable.CreateIfNotExistsAsync();
+            _subcriptionTable.CreateIfNotExistsAsync();
+        }
+
+        //public User AddUser(string userName)
+        //{
+        //    var user = new User {UserName = userName};
+        //    return null;
+        //}
+
+        public Subscription CreateSubscription(Subscription subscription, Guid? feedGuid)
+        {
+            return subscription;
+        }
+
+        public void DeleteSubscription(Guid subscriptionGuid)
+        {
             
         }
 
-        public User AddUser()
+        public void DeleteSubscription(Subscription subscription)
         {
-            return null;
+            
         }
+
+
     }
 }
