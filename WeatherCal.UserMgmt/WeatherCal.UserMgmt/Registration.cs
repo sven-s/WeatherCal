@@ -8,7 +8,18 @@ using WeatherCal.UserMgmt.Entities;
 
 namespace WeatherCal.UserMgmt
 {
-    public class Registration
+    //public interface IRegistration
+    //{
+    //    Task<Feed> AddSubscriptionToFeed(Subscription subscription, Guid? feedGuid);
+    //    void DeleteSubscription(Guid subscriptionGuid);
+    //    void DeleteSubscription(Subscription subscription);
+    //    List<Feed> GetFeeds();
+    //    List<Subscription> GetSubscriptions(Guid feedGuid);
+    //    List<Subscription> GetSubscriptions(Feed feed);
+    //    List<Subscription> GetSubscriptions();
+    //}
+
+    public class Registration : IRegistration
     {
         public const string UserTableName = "Users";
         public const string FeedTableName = "Feeds";
@@ -21,9 +32,9 @@ namespace WeatherCal.UserMgmt
         private CloudStorageAccount _cloudStorageAccount;
         private CloudTableClient _tableClient;
 
-        private CloudTable _userTable;
+        //private CloudTable _userTable;
         private CloudTable _feedTable;
-        private CloudTable _subcriptionTable;
+        //private CloudTable _subcriptionTable;
 
         
 
@@ -40,13 +51,13 @@ namespace WeatherCal.UserMgmt
         private void InitializeTables()
         {
             _tableClient = _cloudStorageAccount.CreateCloudTableClient();
-            _userTable = _tableClient.GetTableReference(UserTableName);
+            //_userTable = _tableClient.GetTableReference(UserTableName);
             _feedTable = _tableClient.GetTableReference(SubscriptionTableName);
-            _subcriptionTable = _tableClient.GetTableReference(SubscriptionTableName);
+            //_subcriptionTable = _tableClient.GetTableReference(SubscriptionTableName);
 
-            _userTable.CreateIfNotExistsAsync();
+            //_userTable.CreateIfNotExistsAsync();
             _feedTable.CreateIfNotExistsAsync();
-            _subcriptionTable.CreateIfNotExistsAsync();
+            //_subcriptionTable.CreateIfNotExistsAsync();
         }
 
         //public User AddUser(string userName)
@@ -54,6 +65,8 @@ namespace WeatherCal.UserMgmt
         //    var user = new User {UserName = userName};
         //    return null;
         //}
+
+        
 
         public async Task<Feed> AddSubscriptionToFeed(Subscription subscription, Guid? feedGuid)
         {
@@ -66,7 +79,23 @@ namespace WeatherCal.UserMgmt
                 if (retrievedResult.Result != null)
                 {
                     if (retrievedResult.Result is Feed tempFeed)
+                    {
                         feed = tempFeed;
+                        feed.Subscriptions.Add(subscription);
+
+                        var updateOperation = TableOperation.Replace(feed);
+                        var result = await _feedTable.ExecuteAsync(updateOperation);
+
+                        if (result.Result != null)
+                        {
+                            return result.Result as Feed;
+                        }
+                    }
+
+                }
+                else
+                {
+                    //throw?
                 }
             }
             else{
@@ -78,7 +107,8 @@ namespace WeatherCal.UserMgmt
 
                 if (insertResult != null)
                 {
-                    //var 
+                    var resultFeed = insertResult.Result as Feed;
+                    return resultFeed;
                 }
             }
 
