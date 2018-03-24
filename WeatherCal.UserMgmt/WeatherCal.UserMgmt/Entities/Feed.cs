@@ -13,6 +13,7 @@ namespace WeatherCal.UserMgmt.Entities
 
         public Feed(Guid id)
         {
+            PartitionKey = "P1";
             RowKey = id.ToString();
         }
 

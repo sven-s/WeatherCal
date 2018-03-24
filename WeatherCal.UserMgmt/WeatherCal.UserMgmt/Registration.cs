@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
 using WeatherCal.UserMgmt.Entities;
@@ -12,6 +13,8 @@ namespace WeatherCal.UserMgmt
         public const string UserTableName = "Users";
         public const string FeedTableName = "Feeds";
         public const string SubscriptionTableName = "Subcriptions";
+
+        public const string PartitionName = "P1";
 
         public const string ConnectionString = "DefaultEndpointsProtocol=https;AccountName=your_account;AccountKey=your_account_key";
 
@@ -52,14 +55,43 @@ namespace WeatherCal.UserMgmt
         //    return null;
         //}
 
-        public Subscription CreateSubscription(Subscription subscription, Guid? feedGuid)
+        public async Task<Feed> AddSubscriptionToFeed(Subscription subscription, Guid? feedGuid)
         {
-            return subscription;
+            var feed = new Feed();
+
+            if (feedGuid.HasValue)
+            {
+                var tableOperation = TableOperation.Retrieve<Feed>(PartitionName, feedGuid.Value.ToString());
+                var retrievedResult = await _feedTable.ExecuteAsync(tableOperation);
+                if (retrievedResult.Result != null)
+                {
+                    if (retrievedResult.Result is Feed tempFeed)
+                        feed = tempFeed;
+                }
+            }
+            else{
+                feed.Subscriptions.Add(subscription);
+
+                var insertOperation = TableOperation.Insert(feed);
+
+                var insertResult = await _feedTable.ExecuteAsync(insertOperation);
+
+                if (insertResult != null)
+                {
+                    //var 
+                }
+            }
+
+            
+
+
+
+            return feed;
         }
 
         public void DeleteSubscription(Guid subscriptionGuid)
         {
-            
+            //if last subscription of the feed, delete feed also
         }
 
         public void DeleteSubscription(Subscription subscription)
@@ -79,6 +111,11 @@ namespace WeatherCal.UserMgmt
         public List<Subscription> GetSubscriptions(Feed feed)
         {
             return GetSubscriptions(feed.Id);
+        }
+
+        public List<Subscription> GetSubscriptions()
+        {
+            return null;
         }
 
 
