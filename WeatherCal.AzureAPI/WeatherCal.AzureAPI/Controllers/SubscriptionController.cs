@@ -4,52 +4,55 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
+using AutoMapper;
 using Swashbuckle.Swagger.Annotations;
 using WeatherCal.AzureAPI.Models;
+using WeatherCal.UserMgmt;
+using WeatherCal.UserMgmt.Entities;
 
 namespace WeatherCal.AzureAPI.Controllers
 {
     public class SubscriptionController : ApiController
     {
-        // GET api/values
+
+        public IRegistration registration = new RegistrationMock();
+
+        // GET api/subscription
         [SwaggerOperation("GetAll")]
-        public IEnumerable<string> Get()
+        public IEnumerable<Subscription> Get()
         {
-            return new string[] { "value1", "value2" };
+            return registration.GetSubscriptions();
         }
 
         // GET api/values/5
         [SwaggerOperation("GetById")]
         [SwaggerResponse(HttpStatusCode.OK)]
         [SwaggerResponse(HttpStatusCode.NotFound)]
-        public string Get(int id)
+        public Subscription Get(Guid id)
         {
-            return "value";
+            return registration.GetSubscriptions().Single(o => o.Id == id);
         }
 
         // POST api/values
         [SwaggerOperation("Create")]
         [SwaggerResponse(HttpStatusCode.Created)]
-        public void Post([FromBody]SubscribeRequest value)
+        public async System.Threading.Tasks.Task<Feed> PostAsync([FromBody]SubscriptionDto subscriptionDto)
         {
-            // todo: value to dto to tablestorage
-            var x = value;
+            var subscription = Mapper.Map<Subscription>(subscriptionDto);
+            if (!string.IsNullOrEmpty(subscriptionDto.FeedId))
+            {
+                return await registration.AddSubscriptionToFeed(subscription, new Guid(subscriptionDto.FeedId));
+            }
+            return await registration.AddSubscriptionToFeed(subscription, null);
         }
 
-        // PUT api/values/5
-        [SwaggerOperation("Update")]
-        [SwaggerResponse(HttpStatusCode.OK)]
-        [SwaggerResponse(HttpStatusCode.NotFound)]
-        public void Put(int id, [FromBody]string value)
-        {
-        }
-
-        // DELETE api/values/5
+        // DELETE api/subscription/5
         [SwaggerOperation("Delete")]
         [SwaggerResponse(HttpStatusCode.OK)]
         [SwaggerResponse(HttpStatusCode.NotFound)]
         public void Delete(Guid id)
         {
+            registration.DeleteSubscription(id);
         }
     }
 }
