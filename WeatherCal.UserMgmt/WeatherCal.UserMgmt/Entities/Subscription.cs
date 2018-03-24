@@ -7,6 +7,15 @@ namespace WeatherCal.UserMgmt.Entities
 {
     public class Subscription : TableEntity
     {
+        public Subscription(Guid id)
+        {
+            RowKey = id.ToString();
+        }
+
+        public Subscription() : this(Guid.NewGuid())
+        {
+        }
+
         public Guid Id { get; set; } = Guid.NewGuid();
 
         public double WindSpeedMin { get; set; }

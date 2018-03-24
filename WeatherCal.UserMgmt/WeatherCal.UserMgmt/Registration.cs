@@ -67,6 +67,20 @@ namespace WeatherCal.UserMgmt
             
         }
 
+        public List<Feed> GetFeeds()
+        {
+            return null;
+        }
+
+        public List<Subscription> GetSubscriptions(Guid feedGuid)
+        {
+            return null;
+        }
+        public List<Subscription> GetSubscriptions(Feed feed)
+        {
+            return GetSubscriptions(feed.Id);
+        }
+
 
     }
 }

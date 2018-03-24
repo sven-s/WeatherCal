@@ -7,6 +7,16 @@ namespace WeatherCal.UserMgmt.Entities
 {
     public class User : TableEntity
     {
+        public User(Guid id)
+        {
+            RowKey = id.ToString();
+        }
+
+        public User() : this(Guid.NewGuid())
+        {
+            
+        }
+
         public Guid Id { get; set; } = new Guid();
 
         public string UserName { get; set; }
