@@ -11,6 +11,7 @@ namespace WeatherCal.UserMgmt.Entities
         {
             PartitionKey = "P1";
             RowKey = id.ToString();
+            WindBearings = new List<(int minAngle, int maxAngle)>();
         }
 
         public Subscription() : this(Guid.NewGuid())
@@ -30,6 +31,8 @@ namespace WeatherCal.UserMgmt.Entities
         public double Latitude { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
+
+        
 
     }
 }

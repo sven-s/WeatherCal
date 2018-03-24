@@ -15,6 +15,7 @@ namespace WeatherCal.UserMgmt.Entities
         {
             PartitionKey = "P1";
             RowKey = id.ToString();
+            Subscriptions = new List<Subscription>();
         }
 
         public Guid Id => Guid.Parse(RowKey);
