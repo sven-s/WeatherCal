@@ -5,23 +5,26 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
+using WeatherCal.UserMgmt;
+using WeatherCal.UserMgmt.Entities;
 
 namespace WeatherCal.AzureAPI.Controllers
 {
     public class FeedController : ApiController
     {
+        IRegistration registration = new RegistrationMock();
         [SwaggerOperation("GetAll")]
-        public IEnumerable<string> Get()
+        public IEnumerable<Feed> Get()
         {
-            return new string[] { "value1", "value2" };
+            return registration.GetFeeds();
         }
 
         [SwaggerOperation("GetById")]
         [SwaggerResponse(HttpStatusCode.OK)]
         [SwaggerResponse(HttpStatusCode.NotFound)]
-        public string Get(Guid id)
+        public Feed Get(Guid id)
         {
-            return "value";
+            return registration.GetFeeds().Single(o => o.Id == id);
         }
     }
 }

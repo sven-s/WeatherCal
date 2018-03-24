@@ -143,6 +143,7 @@
     </Compile>
     <Compile Include="Models\SubscriptionDto.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RegistrationMock.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="ApplicationInsights.config">

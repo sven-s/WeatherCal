@@ -14,39 +14,36 @@ namespace WeatherCal.AzureAPI.Controllers
 {
     public class SubscriptionController : ApiController
     {
+
+        public IRegistration registration = new RegistrationMock();
+
         // GET api/subscription
         [SwaggerOperation("GetAll")]
-        public IEnumerable<string> Get()
+        public IEnumerable<Subscription> Get()
         {
-            return new string[] { "value1", "value2" };
+            return registration.GetSubscriptions();
         }
 
         // GET api/values/5
         [SwaggerOperation("GetById")]
         [SwaggerResponse(HttpStatusCode.OK)]
         [SwaggerResponse(HttpStatusCode.NotFound)]
-        public string Get(Guid id)
+        public Subscription Get(Guid id)
         {
-            return "value";
+            return registration.GetSubscriptions().Single(o => o.Id == id);
         }
 
         // POST api/values
         [SwaggerOperation("Create")]
         [SwaggerResponse(HttpStatusCode.Created)]
-        public void Post([FromBody]SubscriptionDto subscriptionDto)
+        public async System.Threading.Tasks.Task<Feed> PostAsync([FromBody]SubscriptionDto subscriptionDto)
         {
             var subscription = Mapper.Map<Subscription>(subscriptionDto);
-            var registration = new Registration();
-            registration.CreateSubscription(subscription, new Guid(subscriptionDto.FeedId));
-        }
-
-        // PUT api/subscription/5
-        [SwaggerOperation("Update")]
-        [SwaggerResponse(HttpStatusCode.OK)]
-        [SwaggerResponse(HttpStatusCode.NotFound)]
-        public void Put(Guid id, [FromBody]string value)
-        {
-            
+            if (!string.IsNullOrEmpty(subscriptionDto.FeedId))
+            {
+                return await registration.AddSubscriptionToFeed(subscription, new Guid(subscriptionDto.FeedId));
+            }
+            return await registration.AddSubscriptionToFeed(subscription, null);
         }
 
         // DELETE api/subscription/5
@@ -55,7 +52,7 @@ namespace WeatherCal.AzureAPI.Controllers
         [SwaggerResponse(HttpStatusCode.NotFound)]
         public void Delete(Guid id)
         {
-
+            registration.DeleteSubscription(id);
         }
     }
 }
