@@ -4,7 +4,8 @@ using System.Text;
 
 namespace WeatherCal.Contracts
 {
-    public class SubscriptionResult
+    [Serializable]
+    public class HourlyWeatherDto
     {
         public DateTime Begin { get; set; }
 
@@ -18,7 +19,6 @@ namespace WeatherCal.Contracts
         public double Longitude { get; set; }
         public double Latitude { get; set; }
 
-        public Guid SubscriptionGuid { get; set; }
 
 
     }
