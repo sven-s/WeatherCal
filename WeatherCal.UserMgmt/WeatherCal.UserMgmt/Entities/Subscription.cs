@@ -33,13 +33,20 @@ namespace WeatherCal.UserMgmt.Entities
 
         public void SerializeWindBearings()
         {
-            WindBearingSerialized = JsonConvert.SerializeObject(WindBearings);
+            if (WindBearings != null)
+            {
+                WindBearingSerialized = JsonConvert.SerializeObject(WindBearings);
+            }
         }
 
         public void DeserializeWindBearings()
         {
-            WindBearings = JsonConvert
-                .DeserializeObject< List<(int minAngle, int maxAngle)>>(WindBearingSerialized);
+            if (!string.IsNullOrEmpty(WindBearingSerialized))
+            {
+                WindBearings = JsonConvert
+                                .DeserializeObject<List<(int minAngle, int maxAngle)>>(WindBearingSerialized);
+            }
+            
         }
         //POI
 
