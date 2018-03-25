@@ -27,11 +27,14 @@ namespace WeatherCallFunctionsApp
             var items = hourlyWeatherDto.HourlyWeatherItems;
 
             var locations = items.GroupBy(h => h.Location).Select(i => i);
+            var dates = locations.Select(l=> l).GroupBy(d => d.Begin.Date)
             foreach (var location in locations)
             {
                 log.WriteLine("location received: {0}", location.Key);
-
+                var entries = location
             }
+
+
 
 
 
