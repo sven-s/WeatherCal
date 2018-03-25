@@ -88,17 +88,44 @@ namespace WeatherCal.Functions
 
                 foreach (var feed in feeds)
                 {
-                    log.Info($"FeedId {feed.Id}");
                     foreach (var subscription in feed.Subscriptions)
                     {
-                        log.Info($"subscription:{subscription.Name} lat:{subscription.Latitude} lng:{subscription.Longitude} min:{subscription.WindSpeedMin} max:{subscription.WindSpeedMax} ");
+                        log.Info($"FeedId {feed.Id} subscription:{subscription.Name} lat:{subscription.Latitude} lng:{subscription.Longitude} min:{subscription.WindSpeedMin} max:{subscription.WindSpeedMax} ");
+
+                        log.Info($"Get weather data for {subscription.Name} {subscription.Longitude} {subscription.Longitude}");
+
+                        var request = new RestRequest($"forecast/{key.Value}/{subscription.Longitude},{subscription.Longitude}?exclude=currently,daily,flags&lang=de&units=si&extend=hourly", Method.GET); 
+                        var response = client.Execute<Rootobject>(request);
+                        log.Info($"Got response from dark sky");
+                        
                         foreach (var bearing in subscription.WindBearings)
                         {
-                            log.Info($"Bearing min:{bearing.minAngle} max:{bearing.maxAngle}");
+                            log.Info($"  Bearing min:{bearing.minAngle} max:{bearing.maxAngle}");
                         }
+
+                        // do some magic filtering 
+                        var filtereditems = response.Data.hourly.data
+                            .Where(x => x.windSpeed >= subscription.WindSpeedMin && x.windSpeed <= subscription.WindSpeedMax)
+                            .ToList();
+
+                        foreach (var bearing in subscription.WindBearings)
+                        {
+                            filtereditems = filtereditems.Where(x =>
+                                x.windBearing >= bearing.maxAngle && x.windBearing <= bearing.maxAngle).ToList();
+                        }
+
+                        log.Info($"Got {filtereditems.Count} filtered items for {subscription.Name} from {response.Data.hourly.data.Count} total items");
+
+                        m.HourlyWeatherItems.AddRange(filtereditems
+                            .Select(x => new HourlyWeatherDto
+                            {
+                                Location = subscription.Name,
+                                Begin = UnixTimeStampToDateTime (x.time),
+                                WindBearing = x.windBearing,
+                                WindSpeed = (int)x.windSpeed
+                            }));
                     }
                 }
-
 
                 foreach (var location in locations)
                 {
