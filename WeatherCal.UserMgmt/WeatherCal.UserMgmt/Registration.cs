@@ -45,7 +45,7 @@ namespace WeatherCal.UserMgmt
         {
             _tableClient = _cloudStorageAccount.CreateCloudTableClient();
             //_userTable = _tableClient.GetTableReference(UserTableName);
-            _feedTable = _tableClient.GetTableReference(SubscriptionTableName);
+            _feedTable = _tableClient.GetTableReference(FeedTableName);
             //_subcriptionTable = _tableClient.GetTableReference(SubscriptionTableName);
 
             //_userTable.CreateIfNotExistsAsync();
