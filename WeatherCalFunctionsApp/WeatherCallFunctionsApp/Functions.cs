@@ -26,23 +26,17 @@ namespace WeatherCallFunctionsApp
             log.WriteLine("Guid received: {0}", hourlyWeatherDto.SubscriptionGuid);
             var items = hourlyWeatherDto.HourlyWeatherItems;
 
-            var locations = items.GroupBy(h => h.Location).Select(i => i);
-            var dates = locations.Select(l=> l).GroupBy(d => d.Begin.Date)
+            var locations = items.GroupBy(h => new {h.Location, h.Begin.Day}).Select(i => i);
             foreach (var location in locations)
             {
                 log.WriteLine("location received: {0}", location.Key);
-                var entries = location
             }
-
-
-
-
-
+ 
             //var calendar = new Calendar();
             //calendar.AddProperty("X-WR-CALNAME", "SurfWeather"); // sets the calendar title
             //calendar.AddProperty("X-ORIGINAL-URL", "http://aka.ms/AzureFunctionsLive");
             //calendar.AddProperty("METHOD", "PUBLISH");
-            
+
             //var icalevent = new CalendarEvent()
             //{
             //    DtStart = new CalDateTime(new DateTime(2017, 07, 06, 18, 0, 0, DateTimeKind.Utc)),
