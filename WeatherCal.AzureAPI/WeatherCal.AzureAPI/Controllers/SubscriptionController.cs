@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
+using System.Threading.Tasks;
 using AutoMapper;
 using Swashbuckle.Swagger.Annotations;
 using WeatherCal.AzureAPI.Models;
@@ -19,18 +20,21 @@ namespace WeatherCal.AzureAPI.Controllers
 
         // GET api/subscription
         [SwaggerOperation("GetAll")]
-        public IEnumerable<Subscription> Get()
+        public async Task<IEnumerable<Subscription>> GetAsync()
         {
-            return registration.GetSubscriptions();
+            var feeds = await registration.GetFeeds();
+            return feeds.SelectMany(o => o.Subscriptions);
         }
 
         // GET api/values/5
         [SwaggerOperation("GetById")]
         [SwaggerResponse(HttpStatusCode.OK)]
         [SwaggerResponse(HttpStatusCode.NotFound)]
-        public Subscription Get(Guid id)
+        public async Task<Subscription> GetAsync(Guid id)
         {
-            return registration.GetSubscriptions().Single(o => o.Id == id);
+            var feeds = await registration.GetFeeds();
+            var subscription = feeds.SelectMany(o => o.Subscriptions).FirstOrDefault(o => o.Id.Equals(id));
+            return subscription;
         }
 
         // POST api/values

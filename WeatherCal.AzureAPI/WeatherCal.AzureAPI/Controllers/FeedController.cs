@@ -14,17 +14,20 @@ namespace WeatherCal.AzureAPI.Controllers
     {
         IRegistration registration = new RegistrationMock();
         [SwaggerOperation("GetAll")]
-        public IEnumerable<Feed> Get()
+        public async System.Threading.Tasks.Task<IEnumerable<Feed>> GetAsync()
         {
-            return registration.GetFeeds();
+            var feeds = await registration.GetFeeds();
+            return feeds;
         }
 
         [SwaggerOperation("GetById")]
         [SwaggerResponse(HttpStatusCode.OK)]
         [SwaggerResponse(HttpStatusCode.NotFound)]
-        public Feed Get(Guid id)
+        public async System.Threading.Tasks.Task<Feed> GetAsync(Guid id)
         {
-            return registration.GetFeeds().Single(o => o.Id == id);
+            var feeds = await registration.GetFeeds();
+            var feed = feeds.FirstOrDefault(o => o.Id.Equals(id));
+            return feed;
         }
     }
 }

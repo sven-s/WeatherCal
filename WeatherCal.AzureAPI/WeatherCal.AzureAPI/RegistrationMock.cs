@@ -35,31 +35,40 @@ namespace WeatherCal.AzureAPI
             
         }
 
-        public List<Feed> GetFeeds()
+        public Task<List<Feed>> GetFeeds()
         {
-            return new List<Feed>();
+            var feeds = new List<Feed>();
+            Task<List<Feed>> ret = new Task<List<Feed>>(() => feeds);
+            ret.RunSynchronously();
+            return ret;
         }
 
-        public List<Subscription> GetSubscriptions(Guid feedGuid)
+        public Task<List<Subscription>> GetSubscriptions(Guid feedGuid)
         {
-            return new List<Subscription>()
+            var subscriptions = new List<Subscription>()
             {
                 new Subscription()
                 {
                     Id = new Guid("43c0014e-c25e-4618-9ec1-4f8fbf01d188")
                 }
             };
+            Task<List<Subscription>> ret = new Task<List<Subscription>>(() => subscriptions);
+            ret.RunSynchronously();
+            return ret;
         }
 
-        public List<Subscription> GetSubscriptions(Feed feed)
+        public Task<List<Subscription>> GetSubscriptions(Feed feed)
         {
-            return new List<Subscription>()
+            var subscriptions = new List<Subscription>()
             {
                 new Subscription()
                 {
                     Id = new Guid("43c0014e-c25e-4618-9ec1-4f8fbf01d188")
                 }
             };
+            Task<List<Subscription>> ret = new Task<List<Subscription>>(() => subscriptions);
+            ret.RunSynchronously();
+            return ret;
         }
 
         public List<Subscription> GetSubscriptions()
@@ -72,5 +81,6 @@ namespace WeatherCal.AzureAPI
                 }
             };
         }
+
     }
 }
