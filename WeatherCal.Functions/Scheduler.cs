@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.ServiceModel.Channels;
 using System.Text;
 using System.Web.Configuration;
@@ -17,34 +18,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.ServiceBus;
 using Microsoft.ServiceBus;
-using WeatherCallFunctionsApp;
+using WeatherCal.Contracts;
 using Message = Microsoft.Azure.ServiceBus.Message;
 using TopicClient = Microsoft.Azure.ServiceBus.TopicClient;
 
-namespace WeatherCallFunctionsApp
-{
-    public class HourlyWeatherDto
-    {
-        public DateTime DateTimeFrom { get; set; }
-        public string Location { get; set; }
-        public float WindSpeed { get; set; }
-        public int WindDirection { get; set; }
-    }
-
-    public class HourlyWeatherMessage
-    {
-        public string Guid { get; set; }
-
-        public List<HourlyWeatherDto> HourlyWeatherItems { get; set; }
-    }
-}
 
 namespace WeatherCal.Functions
 {
     public static class Scheduler
     {
-
-
         public class Rootobject
         {
             public float latitude { get; set; }
@@ -58,10 +40,10 @@ namespace WeatherCal.Functions
         {
             public string summary { get; set; }
             public string icon { get; set; }
-            public List<Datum> data { get; set; }
+            public List<WeatherData> data { get; set; }
         }
 
-        public class Datum
+        public class WeatherData
         {
             public int time { get; set; }
             public string summary { get; set; }
@@ -84,17 +66,17 @@ namespace WeatherCal.Functions
             public float precipAccumulation { get; set; }
         }
 
-
-
-
-
         [FunctionName("Scheduler")]
         public static void Run([TimerTrigger("0 */30 * * * *")]TimerInfo myTimer, TraceWriter log)
         {
             log.Info($"Starting scheduler at: {DateTime.Now}");
             // get the locations from the table storage
-            var locations = new List<(double lat, double lng)>();
-            locations.Add((lat: 54.2906577, lng: 8.5807452));
+            var locations = new List<(string name, double lat, double lng)>();
+            locations.Add((name: "St. Peter Ording", lat: 54.2906577, lng: 8.5807452));
+            locations.Add(("Klitmoeller",lat: 57.026376, lng: 8.4780126));
+
+            var m = new HourlyWeatherMessage();
+            m.SubscriptionGuid = Guid.NewGuid();
 
             // for all locations query the weather api
             try
@@ -107,53 +89,31 @@ namespace WeatherCal.Functions
 
                 foreach (var location in locations)
                 {
-                    var request = new RestRequest($"forecast/{key.Value}/{location.lat},{location.lng}?exclude=currently,daily,flags&lang=de&units=si", Method.GET);
-//                    IRestResponse response = client.Execute(request);
-  
-                    var response2 = client.Execute<Rootobject>(request);
-                    var content = response2.Data.timezone; // raw content as string
-                    log.Info(content);
+                    var request = new RestRequest($"forecast/{key.Value}/{location.lat},{location.lng}?exclude=currently,daily,flags&lang=de&units=si", Method.GET); 
+                    var response = client.Execute<Rootobject>(request);
 
                     // do some magic filtering 
-
-
-                    // push the stuff into the service bus
-
-                    //var responseMessage = new BrokeredMessage() { Guid = guid, Location = location };
-                    //AzureServiceBusManager.SendResponseMessage(responseMessage);
-
-                    string connectionString = "Endpoint=sb://weathercal.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=b9WBGHjtpJjvowzIuqbeDCD3fI7ii7h2aLvE3N4BKPI=";
-
-
-                    //Sending a message
-
-
-                    var m = new HourlyWeatherMessage();
-                    m.Guid = Guid.NewGuid().ToString();
-                    m.HourlyWeatherItems = new List<HourlyWeatherDto>();
-
-                    var item = new HourlyWeatherDto();
-                    item.Location = "Hamburg";
-                    item.DateTimeFrom = DateTime.Now;
-                    item.WindDirection = 180;
-                    item.WindSpeed = 10;
-                    m.HourlyWeatherItems.Add(item);
-
-
-                    ServiceBusEnvironment.SystemConnectivity.Mode = ConnectivityMode.AutoDetect;
-
-                    var namespaceManager = NamespaceManager.CreateFromConnectionString(connectionString);
-                    
-                    // Get a client to the queue.
-                    var messagingFactory = MessagingFactory.Create(namespaceManager.Address,namespaceManager.Settings.TokenProvider);
-                    var myclient = messagingFactory.CreateTopicClient("hourlyweather");
-
-                  
-                    var bm = new BrokeredMessage(m);
-                    myclient.Send(bm);
+                    m.HourlyWeatherItems.AddRange(response.Data.hourly.data.Where(x => x.windSpeed > 3 && x.windBearing > 180)
+                        .Select(x => new HourlyWeatherDto()
+                        {
+                            Location = location.name,
+                            Begin = UnixTimeStampToDateTime (x.time),
+                            WindBearing = x.windBearing,
+                            WindSpeed = (int)x.windSpeed
+                        }));
 
                 }
+                // push the stuff into the service bus
+                log.Info($"Having {m.HourlyWeatherItems.Count} items");
+                
+                ServiceBusEnvironment.SystemConnectivity.Mode = ConnectivityMode.AutoDetect;
+                string connectionString = "Endpoint=sb://weathercal.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=b9WBGHjtpJjvowzIuqbeDCD3fI7ii7h2aLvE3N4BKPI=";
 
+                var namespaceManager = NamespaceManager.CreateFromConnectionString(connectionString);                   
+                var messagingFactory = MessagingFactory.Create(namespaceManager.Address,namespaceManager.Settings.TokenProvider);
+                var myclient = messagingFactory.CreateTopicClient("hourlyweather");                 
+                var bm = new BrokeredMessage(m);
+                myclient.Send(bm);
 
             }
             catch (Exception ex)
@@ -168,10 +128,17 @@ namespace WeatherCal.Functions
             log.Info($"C# Timer trigger function executed at: {DateTime.Now}");
         }
 
-        public static string SecretUri(string secret)
+        static DateTime UnixTimeStampToDateTime(double unixTimeStamp)
+        {
+            // Unix timestamp is seconds past epoch
+            DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
+            dtDateTime = dtDateTime.AddSeconds(unixTimeStamp).ToLocalTime();
+            return dtDateTime;
+        }
+
+        static string SecretUri(string secret)
         {
             return $"{WebConfigurationManager.AppSettings["KeyVaultUri"]}Secrets/{secret}";
         }
-
     }
 }
