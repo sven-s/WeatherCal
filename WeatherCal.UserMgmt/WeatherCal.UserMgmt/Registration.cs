@@ -27,11 +27,11 @@ namespace WeatherCal.UserMgmt
 
         //private CloudTable _userTable;
         private CloudTable _feedTable;
-        //private CloudTable _subcriptionTable;
+        private CloudTable _subcriptionTable;
 
-        
 
-        
+
+
 
         public Registration(string connectionstring = "")
         {
@@ -46,11 +46,11 @@ namespace WeatherCal.UserMgmt
             _tableClient = _cloudStorageAccount.CreateCloudTableClient();
             //_userTable = _tableClient.GetTableReference(UserTableName);
             _feedTable = _tableClient.GetTableReference(FeedTableName);
-            //_subcriptionTable = _tableClient.GetTableReference(SubscriptionTableName);
+            _subcriptionTable = _tableClient.GetTableReference(SubscriptionTableName);
 
             //_userTable.CreateIfNotExistsAsync();
             _feedTable.CreateIfNotExistsAsync();
-            //_subcriptionTable.CreateIfNotExistsAsync();
+            _subcriptionTable.CreateIfNotExistsAsync();
         }
 
         //public User AddUser(string userName)
@@ -68,13 +68,15 @@ namespace WeatherCal.UserMgmt
             if (feedGuid.HasValue)
             {
                 feed = await LoadFeed(feedGuid.Value);
-                feed.Subscriptions.Add(subscription);
+                //feed.Subscriptions.Add(subscription);
                 return await AlterFeed(feed);
             }
-
             feed.Subscriptions.Add(subscription);
-            return await CreateFeed(feed);
-
+            var createdFeed =  await CreateFeed(feed);
+            subscription.FeedGuid = createdFeed.Id;
+            var createdSubscription = await CreateSubscription(subscription);
+            feed.Subscriptions.Add(createdSubscription);
+            return feed;
         }
 
         public async void DeleteSubscription(Guid subscriptionGuid)
@@ -103,8 +105,26 @@ namespace WeatherCal.UserMgmt
             var queryResult =
             await _feedTable.ExecuteQueryAsync(new TableQuery<Feed>().Where(
                 TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, PartitionName)));
+
+            var feeds = queryResult.ToList();
+            var subscriptions = await GetSubscriptions();
+            foreach (var feed in feeds)
+            {
+                feed.Subscriptions.AddRange(subscriptions.Where(o => o.FeedGuid.Equals(feed.Id)));
+            }
+            return feeds;
+        }
+
+        public async Task<List<Subscription>> GetSubscriptions()
+        {
+            //https://stackoverflow.com/questions/23940246/how-to-query-all-rows-in-windows-azure-table-storage
+            var queryResult =
+            await _subcriptionTable.ExecuteQueryAsync(new TableQuery<Subscription>().Where(
+                TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, PartitionName)));
+
             return queryResult.ToList();
         }
+
 
         public async Task<List<Subscription>> GetSubscriptions(Guid feedGuid)
         {
@@ -147,6 +167,20 @@ namespace WeatherCal.UserMgmt
             throw new Exception($"Could not create feed with Guid: {feed?.Id}");
         }
 
+        private async Task<Subscription> CreateSubscription(Subscription subscription)
+        {
+            var insertOperation = TableOperation.Insert(subscription);
+
+            var insertResult = await _subcriptionTable.ExecuteAsync(insertOperation);
+
+            if (insertResult != null)
+            {
+                var resultFeed = insertResult.Result as Subscription;
+                return resultFeed;
+            }
+            throw new Exception($"Could not create feed with Guid: {subscription?.Id}");
+        }
+
         private async Task<Feed> LoadFeed(Guid feedGuid)
         {
             var tableOperation = TableOperation.Retrieve<Feed>(PartitionName, feedGuid.ToString());
@@ -159,6 +193,20 @@ namespace WeatherCal.UserMgmt
                 }
             }
             throw new Exception($"Could not find a feed with Guid: {feedGuid}");
+        }
+
+        private async Task<Subscription> LoadSubscription(Guid subscriptionGuid)
+        {
+            var tableOperation = TableOperation.Retrieve<Subscription>(PartitionName, subscriptionGuid.ToString());
+            var retrievedResult = await _subcriptionTable.ExecuteAsync(tableOperation);
+            if (retrievedResult.Result != null)
+            {
+                if (retrievedResult.Result is Subscription tempSubscription)
+                {
+                    return tempSubscription;
+                }
+            }
+            throw new Exception($"Could not find a feed with Guid: {subscriptionGuid}");
         }
 
         private async void DeleteFeed(Guid feedGuid)

@@ -20,6 +20,8 @@ namespace WeatherCal.UserMgmt.Entities
 
         public Guid Id { get; set; } = Guid.NewGuid();
 
+        public Guid FeedGuid { get; set; }
+
         public double WindSpeedMin { get; set; }
         public double WindSpeedMax { get; set; }
 

@@ -1,6 +1,7 @@
 ﻿using Swashbuckle.Swagger.Annotations;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -12,7 +13,8 @@ namespace WeatherCal.AzureAPI.Controllers
 {
     public class FeedController : ApiController
     {
-        IRegistration registration = new RegistrationMock();
+        public IRegistration registration = new Registration(ConfigurationManager.AppSettings["tableStorageConnectionString"]);
+
         [SwaggerOperation("GetAll")]
         public async System.Threading.Tasks.Task<IEnumerable<Feed>> GetAsync()
         {

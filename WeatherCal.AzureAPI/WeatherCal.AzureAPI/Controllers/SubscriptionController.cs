@@ -10,13 +10,14 @@ using Swashbuckle.Swagger.Annotations;
 using WeatherCal.AzureAPI.Models;
 using WeatherCal.UserMgmt;
 using WeatherCal.UserMgmt.Entities;
+using System.Configuration;
 
 namespace WeatherCal.AzureAPI.Controllers
 {
     public class SubscriptionController : ApiController
     {
 
-        public IRegistration registration = new RegistrationMock();
+        public IRegistration registration = new Registration(ConfigurationManager.AppSettings["tableStorageConnectionString"]);
 
         // GET api/subscription
         [SwaggerOperation("GetAll")]
