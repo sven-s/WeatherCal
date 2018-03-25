@@ -16,8 +16,28 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.ServiceBus;
+using Microsoft.ServiceBus;
+using WeatherCallFunctionsApp;
 using Message = Microsoft.Azure.ServiceBus.Message;
 using TopicClient = Microsoft.Azure.ServiceBus.TopicClient;
+
+namespace WeatherCallFunctionsApp
+{
+    public class HourlyWeatherDto
+    {
+        public DateTime DateTimeFrom { get; set; }
+        public string Location { get; set; }
+        public float WindSpeed { get; set; }
+        public int WindDirection { get; set; }
+    }
+
+    public class HourlyWeatherMessage
+    {
+        public string Guid { get; set; }
+
+        public List<HourlyWeatherDto> HourlyWeatherItems { get; set; }
+    }
+}
 
 namespace WeatherCal.Functions
 {
@@ -38,7 +58,7 @@ namespace WeatherCal.Functions
         {
             public string summary { get; set; }
             public string icon { get; set; }
-            public Datum[] data { get; set; }
+            public List<Datum> data { get; set; }
         }
 
         public class Datum
@@ -91,8 +111,8 @@ namespace WeatherCal.Functions
 //                    IRestResponse response = client.Execute(request);
   
                     var response2 = client.Execute<Rootobject>(request);
-                    //var content = response2.Data.timezone; // raw content as string
-                    //log.Info(content);
+                    var content = response2.Data.timezone; // raw content as string
+                    log.Info(content);
 
                     // do some magic filtering 
 
@@ -103,18 +123,34 @@ namespace WeatherCal.Functions
                     //AzureServiceBusManager.SendResponseMessage(responseMessage);
 
                     string connectionString = "Endpoint=sb://weathercal.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=b9WBGHjtpJjvowzIuqbeDCD3fI7ii7h2aLvE3N4BKPI=";
- 
-                    MessagingFactory factory = MessagingFactory.CreateFromConnectionString(connectionString);
- 
-//Sending a message
 
 
-                    var productRating = new { ProductId = 123, RatingSum = 23 };
-                    var message = new Message(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(productRating)));
+                    //Sending a message
 
-                    var topicClient = new TopicClient(connectionString, "hourlyweather");
-                    topicClient.SendAsync(message).GetAwaiter().GetResult();
 
+                    var m = new HourlyWeatherMessage();
+                    m.Guid = Guid.NewGuid().ToString();
+                    m.HourlyWeatherItems = new List<HourlyWeatherDto>();
+
+                    var item = new HourlyWeatherDto();
+                    item.Location = "Hamburg";
+                    item.DateTimeFrom = DateTime.Now;
+                    item.WindDirection = 180;
+                    item.WindSpeed = 10;
+                    m.HourlyWeatherItems.Add(item);
+
+
+                    ServiceBusEnvironment.SystemConnectivity.Mode = ConnectivityMode.AutoDetect;
+
+                    var namespaceManager = NamespaceManager.CreateFromConnectionString(connectionString);
+                    
+                    // Get a client to the queue.
+                    var messagingFactory = MessagingFactory.Create(namespaceManager.Address,namespaceManager.Settings.TokenProvider);
+                    var myclient = messagingFactory.CreateTopicClient("hourlyweather");
+
+                  
+                    var bm = new BrokeredMessage(m);
+                    myclient.Send(bm);
 
                 }
 
