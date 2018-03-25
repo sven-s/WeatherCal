@@ -4,11 +4,12 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.ServiceBus.Messaging;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
 using WeatherCal.Contracts;
 
-//using Ical.Net;
-//using Ical.Net.CalendarComponents;
-//using Ical.Net.DataTypes;
 
 namespace WeatherCallFunctionsApp
 {
@@ -27,26 +28,12 @@ namespace WeatherCallFunctionsApp
             var items = hourlyWeatherDto.HourlyWeatherItems;
 
             var locations = items.GroupBy(h => new {h.Location, h.Begin.Day}).Select(i => i);
+
             foreach (var location in locations)
             {
                 log.WriteLine("location received: {0}", location.Key);
             }
  
-            //var calendar = new Calendar();
-            //calendar.AddProperty("X-WR-CALNAME", "SurfWeather"); // sets the calendar title
-            //calendar.AddProperty("X-ORIGINAL-URL", "http://aka.ms/AzureFunctionsLive");
-            //calendar.AddProperty("METHOD", "PUBLISH");
-
-            //var icalevent = new CalendarEvent()
-            //{
-            //    DtStart = new CalDateTime(new DateTime(2017, 07, 06, 18, 0, 0, DateTimeKind.Utc)),
-            //    DtEnd = new CalDateTime(new DateTime(2017, 07, 06, 19, 0, 0, DateTimeKind.Utc)),
-            //    Created = new CalDateTime(DateTime.Now),
-            //    Location = "http://aka.ms/AzureFunctionsLive",
-            //    Summary = "Azure Function Webinar",
-            //    Url = new Uri("http://aka.ms/AzureFunctionsLive")
-            //};
-
             //var hourlyWeather = JsonConvert.SerializeObject(hourlyWeatherDto);
         }
     }
