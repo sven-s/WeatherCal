@@ -1,0 +1,25 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace WeatherCal.Contracts
+{
+    public class SubscriptionResult
+    {
+        public DateTime Begin { get; set; }
+
+        public string Location { get; set; }
+
+        public int WindSpeed { get; set; }
+
+        public int WindBearing { get; set; }
+        
+        //still send exact location?
+        public double Longitude { get; set; }
+        public double Latitude { get; set; }
+
+        public Guid SubscriptionGuid { get; set; }
+
+
+    }
+}
