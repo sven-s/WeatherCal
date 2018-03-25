@@ -63,6 +63,7 @@ namespace WeatherCal.UserMgmt
 
         public async Task<Feed> AddSubscriptionToFeed(Subscription subscription, Guid? feedGuid)
         {
+            subscription.SerializeWindBearings();
             var feed = new Feed();
 
             if (feedGuid.HasValue)
@@ -111,6 +112,10 @@ namespace WeatherCal.UserMgmt
             foreach (var feed in feeds)
             {
                 feed.Subscriptions.AddRange(subscriptions.Where(o => o.FeedGuid.Equals(feed.Id)));
+                foreach (var feedSubscription in feed.Subscriptions)
+                {
+                    feedSubscription.DeserializeWindBearings();
+                }
             }
             return feeds;
         }

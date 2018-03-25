@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.WindowsAzure.Storage.Table;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace WeatherCal.UserMgmt.Entities
 {
@@ -27,6 +29,18 @@ namespace WeatherCal.UserMgmt.Entities
 
         public List<(int minAngle, int maxAngle)> WindBearings { get; set; }
 
+        public string WindBearingSerialized { get; set; }
+
+        public void SerializeWindBearings()
+        {
+            WindBearingSerialized = JsonConvert.SerializeObject(WindBearings);
+        }
+
+        public void DeserializeWindBearings()
+        {
+            WindBearings = JsonConvert
+                .DeserializeObject< List<(int minAngle, int maxAngle)>>(WindBearingSerialized);
+        }
         //POI
 
         public double Longitude { get; set; }
