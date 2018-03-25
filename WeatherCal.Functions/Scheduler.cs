@@ -10,6 +10,7 @@ using Microsoft.Azure.Services.AppAuthentication;
 using Microsoft.ServiceBus.Messaging;
 using Microsoft.ServiceBus;
 using WeatherCal.Contracts;
+using WeatherCal.UserMgmt;
 
 namespace WeatherCal.Functions
 {
@@ -73,9 +74,31 @@ namespace WeatherCal.Functions
             {
                 var serviceTokenProvider = new AzureServiceTokenProvider();
                 var keyVault = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(serviceTokenProvider.KeyVaultTokenCallback));
+
                 var secretUri = SecretUri("Darksky-Key");
                 var key = keyVault.GetSecretAsync(secretUri).GetAwaiter().GetResult();
                 var client = new RestClient("https://api.darksky.net");
+
+
+                var subscriptionTableUri = SecretUri("Subscription-Table");
+                var tableStorageConnectionKey = keyVault.GetSecretAsync(subscriptionTableUri).GetAwaiter().GetResult();
+
+                var instance = new Registration(tableStorageConnectionKey.Value);
+                var feeds = instance.GetFeeds().GetAwaiter().GetResult();
+
+                foreach (var feed in feeds)
+                {
+                    log.Info($"FeedId {feed.Id}");
+                    foreach (var subscription in feed.Subscriptions)
+                    {
+                        log.Info($"subscription:{subscription.Name} lat:{subscription.Latitude} lng:{subscription.Longitude} min:{subscription.WindSpeedMin} max:{subscription.WindSpeedMax} ");
+                        foreach (var bearing in subscription.WindBearings)
+                        {
+                            log.Info($"Bearing min:{bearing.minAngle} max:{bearing.maxAngle}");
+                        }
+                    }
+                }
+
 
                 foreach (var location in locations)
                 {
@@ -83,6 +106,7 @@ namespace WeatherCal.Functions
 
                     var request = new RestRequest($"forecast/{key.Value}/{location.lat},{location.lng}?exclude=currently,daily,flags&lang=de&units=si&extend=hourly", Method.GET); 
                     var response = client.Execute<Rootobject>(request);
+                    log.Info($"Got response from dark sky");
 
                     // do some magic filtering 
                     var filtereditems = response.Data.hourly.data.Where(x => x.windSpeed > 7 && x.windBearing > 180)
