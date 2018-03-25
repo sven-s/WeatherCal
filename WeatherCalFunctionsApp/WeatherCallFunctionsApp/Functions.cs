@@ -3,7 +3,6 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.ServiceBus.Messaging;
 using System.IO;
 using Ical.Net;
-using WeatherCal.Contracts;
 //using Ical.Net.DataTypes;
 
 namespace WeatherCallFunctionsApp
@@ -19,7 +18,7 @@ namespace WeatherCallFunctionsApp
         {
             log.WriteLine("topic received v1.1");
             var hourlyWeatherDto = message.GetBody<HourlyWeatherMessage>();
-            log.WriteLine("received: {0}", hourlyWeatherDto.Guid);
+            log.WriteLine("received: {0}", hourlyWeatherDto.SubscriptionGuid);
 
 
 
