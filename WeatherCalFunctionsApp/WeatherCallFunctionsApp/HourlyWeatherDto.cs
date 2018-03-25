@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace WeatherCallFunctionsApp
+namespace WeatherCal.Contracts
 {
     [Serializable]
     public class HourlyWeatherDto
