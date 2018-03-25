@@ -13,11 +13,9 @@ namespace WeatherCallFunctionsApp
         public static void WeatherAppTopicListener(
             [ServiceBusTrigger("%HourlyWeatherTopicName%", "%WeatherCalSubscriptionName%")] BrokeredMessage message, TextWriter log)
         {
-            //log.WriteLine("topic received");
-            //var hourlyWeatherDto = message.GetBody<HourlyWeatherDto>();
+            log.WriteLine("topic received v1.1");
             var hourlyWeatherDto = message.GetBody<HourlyWeatherMessage>();
-            log.WriteLine("message received");
-            log.WriteLine("received: {0}", hourlyWeatherDto);
+            log.WriteLine("received: {0}", hourlyWeatherDto.Guid);
 
             //var hourlyWeather = JsonConvert.SerializeObject(hourlyWeatherDto);
         }
