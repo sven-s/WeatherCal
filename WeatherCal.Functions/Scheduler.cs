@@ -1,27 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.ServiceModel.Channels;
-using System.Text;
 using System.Web.Configuration;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
 using RestSharp;
 using Microsoft.Azure.KeyVault;
-using Microsoft.Azure.KeyVault.Models;
 using Microsoft.Azure.Services.AppAuthentication;
 using Microsoft.ServiceBus.Messaging;
-using Newtonsoft.Json;
-
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Azure.ServiceBus;
 using Microsoft.ServiceBus;
 using WeatherCal.Contracts;
-using Message = Microsoft.Azure.ServiceBus.Message;
-using TopicClient = Microsoft.Azure.ServiceBus.TopicClient;
-
 
 namespace WeatherCal.Functions
 {
@@ -73,10 +61,12 @@ namespace WeatherCal.Functions
             // get the locations from the table storage
             var locations = new List<(string name, double lat, double lng)>();
             locations.Add((name: "St. Peter Ording", lat: 54.2906577, lng: 8.5807452));
-            locations.Add(("Klitmoeller",lat: 57.026376, lng: 8.4780126));
-
+            locations.Add((name: "Klitmoeller",lat: 57.026376, lng: 8.4780126));
+            locations.Add((name: "Heiligenhafen",lat: 54.3843142, lng: 10.9413962));
+            
             var m = new HourlyWeatherMessage();
             m.SubscriptionGuid = Guid.NewGuid();
+            m.HourlyWeatherItems = new List<HourlyWeatherDto>();
 
             // for all locations query the weather api
             try
@@ -89,12 +79,18 @@ namespace WeatherCal.Functions
 
                 foreach (var location in locations)
                 {
-                    var request = new RestRequest($"forecast/{key.Value}/{location.lat},{location.lng}?exclude=currently,daily,flags&lang=de&units=si", Method.GET); 
+                    log.Info($"Get weather data for {location.name} {location.lat} {location.lng}");
+
+                    var request = new RestRequest($"forecast/{key.Value}/{location.lat},{location.lng}?exclude=currently,daily,flags&lang=de&units=si&extend=hourly", Method.GET); 
                     var response = client.Execute<Rootobject>(request);
 
                     // do some magic filtering 
-                    m.HourlyWeatherItems.AddRange(response.Data.hourly.data.Where(x => x.windSpeed > 3 && x.windBearing > 180)
-                        .Select(x => new HourlyWeatherDto()
+                    var filtereditems = response.Data.hourly.data.Where(x => x.windSpeed > 7 && x.windBearing > 180)
+                        .ToList();
+                    log.Info($"Got {filtereditems.Count} filtered items for {location.name} from {response.Data.hourly.data.Count} total items");
+
+                    m.HourlyWeatherItems.AddRange(filtereditems
+                        .Select(x => new HourlyWeatherDto
                         {
                             Location = location.name,
                             Begin = UnixTimeStampToDateTime (x.time),
