@@ -16,8 +16,8 @@
     <PackageReference Include="RestSharp" Version="106.2.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\WeatherCal.UserMgmt\WeatherCal.Contracts\WeatherCal.Contracts.csproj" />
-    <ProjectReference Include="..\WeatherCal.UserMgmt\WeatherCal.UserMgmt\WeatherCal.UserMgmt.csproj" />
+    <ProjectReference Include="..\WeatherCal.Contracts\WeatherCal.Contracts.csproj" />
+    <ProjectReference Include="..\WeatherCal.FeedMgmt\WeatherCal.FeedMgmt.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />

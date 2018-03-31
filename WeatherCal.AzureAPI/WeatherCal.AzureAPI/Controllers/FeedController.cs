@@ -4,21 +4,20 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Web.Http;
-using WeatherCal.UserMgmt;
-using WeatherCal.UserMgmt.Entities;
+using WeatherCal.FeedMgmt;
+using WeatherCal.FeedMgmt.Entities;
 
 namespace WeatherCal.AzureAPI.Controllers
 {
     public class FeedController : ApiController
     {
-        public IRegistration registration = new Registration(ConfigurationManager.AppSettings["tableStorageConnectionString"]);
+        private readonly IRegistration _registration = new Registration(ConfigurationData.TableStorageConnectionKey);
 
         [SwaggerOperation("GetAll")]
         public async System.Threading.Tasks.Task<IEnumerable<Feed>> GetAsync()
         {
-            var feeds = await registration.GetFeeds();
+            var feeds = await _registration.GetFeeds();
             return feeds;
         }
 
@@ -27,7 +26,7 @@ namespace WeatherCal.AzureAPI.Controllers
         [SwaggerResponse(HttpStatusCode.NotFound)]
         public async System.Threading.Tasks.Task<Feed> GetAsync(Guid id)
         {
-            var feeds = await registration.GetFeeds();
+            var feeds = await _registration.GetFeeds();
             var feed = feeds.FirstOrDefault(o => o.Id.Equals(id));
             return feed;
         }

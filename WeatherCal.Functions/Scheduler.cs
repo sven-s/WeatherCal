@@ -10,7 +10,7 @@ using Microsoft.Azure.Services.AppAuthentication;
 using Microsoft.ServiceBus.Messaging;
 using Microsoft.ServiceBus;
 using WeatherCal.Contracts;
-using WeatherCal.UserMgmt;
+using WeatherCal.FeedMgmt;
 
 namespace WeatherCal.Functions
 {
@@ -56,7 +56,7 @@ namespace WeatherCal.Functions
         }
 
         [FunctionName("Scheduler")]
-        public static void Run([TimerTrigger("0 */30 * * * *")]TimerInfo myTimer, TraceWriter log)
+        public static void Run([TimerTrigger("0 0 9 * * *")]TimerInfo myTimer, TraceWriter log)
         {
             log.Info($"Starting scheduler at: {DateTime.Now}");
             // get the locations from the table storage
@@ -152,16 +152,17 @@ namespace WeatherCal.Functions
                 }
                 // push the stuff into the service bus
                 log.Info($"Having {m.HourlyWeatherItems.Count} items");
-                
-                ServiceBusEnvironment.SystemConnectivity.Mode = ConnectivityMode.AutoDetect;
-                string connectionString = "Endpoint=sb://weathercal.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=b9WBGHjtpJjvowzIuqbeDCD3fI7ii7h2aLvE3N4BKPI=";
 
-                var namespaceManager = NamespaceManager.CreateFromConnectionString(connectionString);                   
-                var messagingFactory = MessagingFactory.Create(namespaceManager.Address,namespaceManager.Settings.TokenProvider);
-                var myclient = messagingFactory.CreateTopicClient("hourlyweather");                 
+                ServiceBusEnvironment.SystemConnectivity.Mode = ConnectivityMode.AutoDetect;
+                var connectionStringUri = SecretUri("servicebus");
+                var connectionString = keyVault.GetSecretAsync(connectionStringUri).GetAwaiter().GetResult();
+
+                var namespaceManager = NamespaceManager.CreateFromConnectionString(connectionString.Value);
+                var messagingFactory = MessagingFactory.Create(namespaceManager.Address, namespaceManager.Settings.TokenProvider);
+                var myclient = messagingFactory.CreateTopicClient("hourlyweather");
                 var bm = new BrokeredMessage(m);
                 myclient.Send(bm);
-
+                log.Info("Sended message to service bus");
             }
             catch (Exception ex)
             {
@@ -169,16 +170,13 @@ namespace WeatherCal.Functions
                 throw;
             }
 
-            // write the response into the message bus
-
-
             log.Info($"C# Timer trigger function executed at: {DateTime.Now}");
         }
 
         static DateTime UnixTimeStampToDateTime(double unixTimeStamp)
         {
             // Unix timestamp is seconds past epoch
-            DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
+            var dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
             dtDateTime = dtDateTime.AddSeconds(unixTimeStamp).ToLocalTime();
             return dtDateTime;
         }

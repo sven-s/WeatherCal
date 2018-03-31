@@ -2,28 +2,25 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Web.Http;
 using System.Threading.Tasks;
 using AutoMapper;
 using Swashbuckle.Swagger.Annotations;
 using WeatherCal.AzureAPI.Models;
-using WeatherCal.UserMgmt;
-using WeatherCal.UserMgmt.Entities;
-using System.Configuration;
+using WeatherCal.FeedMgmt;
+using WeatherCal.FeedMgmt.Entities;
 
 namespace WeatherCal.AzureAPI.Controllers
 {
     public class SubscriptionController : ApiController
     {
-
-        public IRegistration registration = new Registration(ConfigurationManager.AppSettings["tableStorageConnectionString"]);
+        public IRegistration Registration = new Registration(ConfigurationData.TableStorageConnectionKey);
 
         // GET api/subscription
         [SwaggerOperation("GetAll")]
         public async Task<IEnumerable<Subscription>> GetAsync()
         {
-            var feeds = await registration.GetFeeds();
+            var feeds = await Registration.GetFeeds();
             return feeds.SelectMany(o => o.Subscriptions);
         }
 
@@ -33,7 +30,7 @@ namespace WeatherCal.AzureAPI.Controllers
         [SwaggerResponse(HttpStatusCode.NotFound)]
         public async Task<Subscription> GetAsync(Guid id)
         {
-            var feeds = await registration.GetFeeds();
+            var feeds = await Registration.GetFeeds();
             var subscription = feeds.SelectMany(o => o.Subscriptions).FirstOrDefault(o => o.Id.Equals(id));
             return subscription;
         }
@@ -41,14 +38,14 @@ namespace WeatherCal.AzureAPI.Controllers
         // POST api/values
         [SwaggerOperation("Create")]
         [SwaggerResponse(HttpStatusCode.Created)]
-        public async System.Threading.Tasks.Task<Feed> PostAsync([FromBody]SubscriptionDto subscriptionDto)
+        public async Task<Feed> PostAsync([FromBody]SubscriptionDto subscriptionDto)
         {
             var subscription = Mapper.Map<Subscription>(subscriptionDto);
             if (!string.IsNullOrEmpty(subscriptionDto.FeedId))
             {
-                return await registration.AddSubscriptionToFeed(subscription, new Guid(subscriptionDto.FeedId));
+                return await Registration.AddSubscriptionToFeed(subscription, new Guid(subscriptionDto.FeedId));
             }
-            return await registration.AddSubscriptionToFeed(subscription, null);
+            return await Registration.AddSubscriptionToFeed(subscription, null);
         }
 
         // DELETE api/subscription/5
@@ -57,7 +54,7 @@ namespace WeatherCal.AzureAPI.Controllers
         [SwaggerResponse(HttpStatusCode.NotFound)]
         public void Delete(Guid id)
         {
-            registration.DeleteSubscription(id);
+            Registration.DeleteSubscription(id);
         }
     }
 }

@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using System.Web;
-using WeatherCal.UserMgmt;
-using WeatherCal.UserMgmt.Entities;
+using WeatherCal.FeedMgmt;
+using WeatherCal.FeedMgmt.Entities;
 
 namespace WeatherCal.AzureAPI
 {
@@ -20,7 +18,7 @@ namespace WeatherCal.AzureAPI
                     subscription
                 }
             };
-            Task<Feed> ret = new Task<Feed>(() => feed);
+            var ret = new Task<Feed>(() => feed);
             ret.RunSynchronously();
             return ret;
         }
@@ -38,7 +36,7 @@ namespace WeatherCal.AzureAPI
         public Task<List<Feed>> GetFeeds()
         {
             var feeds = new List<Feed>();
-            Task<List<Feed>> ret = new Task<List<Feed>>(() => feeds);
+            var ret = new Task<List<Feed>>(() => feeds);
             ret.RunSynchronously();
             return ret;
         }
@@ -52,7 +50,7 @@ namespace WeatherCal.AzureAPI
                     Id = new Guid("43c0014e-c25e-4618-9ec1-4f8fbf01d188")
                 }
             };
-            Task<List<Subscription>> ret = new Task<List<Subscription>>(() => subscriptions);
+            var ret = new Task<List<Subscription>>(() => subscriptions);
             ret.RunSynchronously();
             return ret;
         }
@@ -66,7 +64,7 @@ namespace WeatherCal.AzureAPI
                     Id = new Guid("43c0014e-c25e-4618-9ec1-4f8fbf01d188")
                 }
             };
-            Task<List<Subscription>> ret = new Task<List<Subscription>>(() => subscriptions);
+            var ret = new Task<List<Subscription>>(() => subscriptions);
             ret.RunSynchronously();
             return ret;
         }
@@ -81,6 +79,5 @@ namespace WeatherCal.AzureAPI
                 }
             };
         }
-
     }
 }

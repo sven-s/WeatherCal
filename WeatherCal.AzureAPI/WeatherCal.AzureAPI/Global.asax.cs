@@ -1,12 +1,7 @@
 ﻿using AutoMapper;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 using System.Web.Http;
-using System.Web.Routing;
 using WeatherCal.AzureAPI.Models;
-using WeatherCal.UserMgmt.Entities;
+using WeatherCal.FeedMgmt.Entities;
 
 namespace WeatherCal.AzureAPI
 {
