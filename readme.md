@@ -12,6 +12,9 @@ This is the diagram which we draw during the hackathon:
 
 ![Architecture](/Arch.jpg "Architecture")
 
+I decided to draw a "cleaner" new diagram:
+![Architecture](/Arch_Reworked.jpg "Architecture")
+
 We identified the terms of a feed and subscrption. A feed is a collection of subscription and a subscription is the notification for a location with specific conditions.
 
 The application is split into 3 parts:
@@ -34,3 +37,4 @@ The application is split into 3 parts:
 - Azure Webjobs
 - Azure Service Bus
 - Azure Table Storage
+
