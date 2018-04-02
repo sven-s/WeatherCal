@@ -25,7 +25,7 @@ The application is split into 3 parts:
   - Filter result by wind speed and bearing conditions
   - Pushes a message per feed to a topic in a Azure Service Bus
 - Webjob
-  - Retrieves the message from the Service Bus and transforms the result of the scheduler function into a calendar event. 
+  - Retrieves the message from the Service Bus and transforms the result of the scheduler function into a calendar event.
 
 ## Used Azure products
 
